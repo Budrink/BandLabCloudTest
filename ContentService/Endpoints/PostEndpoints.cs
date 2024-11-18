@@ -11,23 +11,25 @@ namespace Content.Endpoints
     {
         public static void MapPostEndpoints(this IEndpointRouteBuilder routes)
         {
-            // Создание поста
             routes.MapPost("/api/posts/create",
-                [Authorize] async (IPostService postService, HttpContext httpContext, string caption, IFormFile image) =>
+                async (IPostService postService, string userName, string caption, IFormFile image) =>
                 {
-                    var userName = httpContext.User.Identity?.Name;
+                    //var userName = httpContext.User.Identity?.Name;
                     var post = await postService.CreatePostAsync(caption, image, userName);
                     return Results.Ok(post);
                 }).DisableAntiforgery();
 
-            // Получение списка постов с последними 2 комментариями
             routes.MapGet("/api/posts", async (IPostService postService) =>
             {
                 var posts = await postService.GetPostsAsync();
                 return Results.Ok(posts);
             });
 
-            // Получение всех комментариев к посту
+            routes.MapGet("api/check", (IPostService postService) =>
+            {
+                return Results.Ok("OK");
+            });
+
             routes.MapGet("/api/posts/{postId}/comments", async (Guid postId, IPostService postService) =>
             {
                 try
@@ -41,7 +43,6 @@ namespace Content.Endpoints
                 }
             });
 
-            // Добавление комментария
             routes.MapPost("/api/posts/{postId}/comment",
                 [Authorize] async (Guid postId, string content, HttpContext httpContext, IPostService postService) =>
                 {
@@ -57,7 +58,6 @@ namespace Content.Endpoints
                     }
                 }).DisableAntiforgery();
 
-            // Удаление комментария
             routes.MapDelete("/api/posts/{postId}/comments/{commentId}",
                 [Authorize] async (Guid postId, Guid commentId, HttpContext httpContext, IPostService postService) =>
                 {
