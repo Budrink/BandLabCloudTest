@@ -1,0 +1,13 @@
+E:\work\BandLabCloudTest\ImageProcessor\bin\Release\net8.0\publish\ImageProcessor.deps.json
+E:\work\BandLabCloudTest\ImageProcessor\bin\Release\net8.0\publish\ImageProcessor.runtimeconfig.json
+E:\work\BandLabCloudTest\ImageProcessor\bin\Release\net8.0\publish\ImageProcessor.pdb
+E:\work\BandLabCloudTest\ImageProcessor\bin\Release\net8.0\publish\Amazon.Lambda.Core.dll
+E:\work\BandLabCloudTest\ImageProcessor\bin\Release\net8.0\publish\Amazon.Lambda.S3Events.dll
+E:\work\BandLabCloudTest\ImageProcessor\bin\Release\net8.0\publish\Amazon.Lambda.Serialization.SystemTextJson.dll
+E:\work\BandLabCloudTest\ImageProcessor\bin\Release\net8.0\publish\Amazon.Lambda.SQSEvents.dll
+E:\work\BandLabCloudTest\ImageProcessor\bin\Release\net8.0\publish\AWSSDK.Core.dll
+E:\work\BandLabCloudTest\ImageProcessor\bin\Release\net8.0\publish\AWSSDK.S3.dll
+E:\work\BandLabCloudTest\ImageProcessor\bin\Release\net8.0\publish\AWSSDK.SQS.dll
+E:\work\BandLabCloudTest\ImageProcessor\bin\Release\net8.0\publish\Newtonsoft.Json.dll
+E:\work\BandLabCloudTest\ImageProcessor\bin\Release\net8.0\publish\SixLabors.ImageSharp.dll
+E:\work\BandLabCloudTest\ImageProcessor\bin\Release\net8.0\publish\ImageProcessor.dll

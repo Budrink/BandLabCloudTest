@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "tcYVvZALNAtMRuZqlYrdbW7NnOivkYfNv9DIg4jcjQk=",
+  "Source": "ContentService",
+  "BasePath": "_content/ContentService",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

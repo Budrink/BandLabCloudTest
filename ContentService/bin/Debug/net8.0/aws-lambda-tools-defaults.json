@@ -1,0 +1,11 @@
+{
+    "Information": [
+        {
+        "Name": "ContentService",
+        "Description": "Content Service API",
+        "MemorySize": 256,
+        "Timeout": 30,
+        "Role": "arn:aws:iam::474668427912:user/BandlabTest"
+        }
+    ]
+}
