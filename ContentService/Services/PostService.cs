@@ -6,6 +6,7 @@ using Content.Models;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.S3;
 using Amazon.S3.Model;
+using Amazon.DynamoDBv2.DocumentModel;
 
 namespace Content.Services
 {
@@ -111,12 +112,14 @@ namespace Content.Services
 
         public async Task<List<CommentDto>> GetPostCommentsAsync(Guid postId)
         {
-            var post = await _dbContext.LoadAsync<Post>(postId);
+            var conditions = new List<ScanCondition>
+            {
+                new ScanCondition("PostId", ScanOperator.Equal, postId)
+            };
 
-            if (post == null)
-                throw new KeyNotFoundException("Post not found.");
+            var comments = await _dbContext.ScanAsync<Comment>(conditions).GetRemainingAsync();
 
-            return post.Comments
+            return comments
                 .OrderByDescending(c => c.CreatedAt)
                 .Select(c => new CommentDto
                 {
@@ -130,21 +133,16 @@ namespace Content.Services
 
         public async Task<CommentDto> AddCommentAsync(Guid postId, string content, string creator)
         {
-            var post = await _dbContext.LoadAsync<Post>(postId);
-            if (post == null)
-                throw new KeyNotFoundException("Post not found.");
-
             var comment = new Comment
             {
+                PostId = postId,
                 Id = Guid.NewGuid(),
                 Content = content,
                 Creator = creator,
-                CreatedAt = DateTime.UtcNow,
-                PostId = postId
+                CreatedAt = DateTime.UtcNow
             };
 
-            post.Comments.Add(comment);
-            await _dbContext.SaveAsync(post);
+            await _dbContext.SaveAsync(comment);
 
             return new CommentDto
             {
@@ -157,19 +155,14 @@ namespace Content.Services
 
         public async Task<bool> DeleteCommentAsync(Guid postId, Guid commentId, string currentUser)
         {
-            var post = await _dbContext.LoadAsync<Post>(postId);
-            if (post == null)
-                throw new KeyNotFoundException("Post not found.");
-
-            var comment = post.Comments.FirstOrDefault(c => c.Id == commentId);
+            var comment = await _dbContext.LoadAsync<Comment>(postId, commentId);
             if (comment == null)
                 throw new KeyNotFoundException("Comment not found.");
 
             if (comment.Creator != currentUser)
                 throw new UnauthorizedAccessException("You are not authorized to delete this comment.");
 
-            post.Comments.Remove(comment);
-            await _dbContext.SaveAsync(post);
+            await _dbContext.DeleteAsync(comment);
             return true;
         }
 
