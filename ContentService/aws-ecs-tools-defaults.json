@@ -1,0 +1,25 @@
+
+{
+    "region" : "eu-north-1",
+    "profile" : "default",
+    "configuration" : "Release",
+    "image-tag"     : "contentservicede:latest",
+    "docker-build-working-dir" : "",
+    "task-definition-name"     : "ContentService",
+    "task-definition-network-mode" : "awsvpc",
+    "task-cpu"                     : "256",
+    "task-memory"                  : "512",
+    "platform-version"             : "LATEST",
+    "task-definition-task-role"    : "arn:aws:iam::474668427912:role/ECSTasks",
+    "task-execution-role"          : "arn:aws:iam::474668427912:role/ecsTaskExecutionRole",
+    "container-name"               : "ContentService",
+    "container-port-mapping"       : "8080:8080",
+    "container-environment-variables" : "\"ASPNETCORE_ENVIRONMENT\"=\"Production\"",
+    "cluster"                         : "ContentServiceDe",
+    "launch-type"                     : "FARGATE",
+    "launch-subnets"                  : "subnet-0ccebb005042cdce0,subnet-02ff1558b4b2df7b9,subnet-06dc074acb4cafaee",
+    "launch-security-groups"          : "sg-0d3edd35be7958265",
+    "assign-public-ip"                : true,
+    "task-count"                      : 1,
+    "vstoolkit-deployment-mode"       : "RunTask"
+}

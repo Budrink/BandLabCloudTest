@@ -29,8 +29,11 @@ namespace ImageProcessor
         {
             foreach (var record in sqsEvent.Records)
             {
+                context.Logger.LogLine($"Processing message {record.Body}");
                 var messageBody = JsonConvert.DeserializeObject<S3EventNotification>(record.Body);
+                context.Logger.LogLine($"Processing message {messageBody}");
                 var bucketName = messageBody.BucketName;
+                var postId = messageBody.PostId;
                 var objectKey = messageBody.ObjectKey;
                 var resizedObjectKey = $"resized-{objectKey}";
 
@@ -61,7 +64,7 @@ namespace ImageProcessor
                     // Отправка уведомления в SQS
                     var notification = new
                     {
-                        PostId = messageBody.PostId,
+                        PostId = postId,
                         OriginalObjectKey = objectKey,
                         ResizedObjectKey = resizedObjectKey,
                         ResizedImageUrl = url

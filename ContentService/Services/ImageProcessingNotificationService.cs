@@ -29,8 +29,6 @@ namespace Content.Services
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                _logger.LogInformation("ImageProcessingNotificationService is processing messages.");
-
                 foreach (var queueUrl in _queueUrls)
                 {
                     await ProcessMessagesFromQueue(queueUrl, stoppingToken);
@@ -54,6 +52,7 @@ namespace Content.Services
             var receiveMessageResponse = await _sqsClient.ReceiveMessageAsync(receiveMessageRequest, token);
             foreach (var message in receiveMessageResponse.Messages)
             {
+                _logger.LogInformation($"Processing message {message.Body}");
                 try
                 {
                     var notification = JsonConvert.DeserializeObject<SqsNotification>(message.Body);
@@ -83,7 +82,7 @@ namespace Content.Services
 
     public class SqsNotification
     {
-        public string PostId { get; set; }
+        public Guid PostId { get; set; }
         public string OriginalObjectKey { get; set; }
         public string ResizedObjectKey { get; set; }
         public string ResizedImageUrl { get; set; }

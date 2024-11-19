@@ -4,20 +4,26 @@ using Amazon.SQS.Model;
 using Content.Dto;
 using Content.Models;
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.S3;
 
 namespace Content.Services
 {
     public class PostService : IPostService
     {
-         private readonly IDynamoDBContext _dbContext;
+        private readonly IDynamoDBContext _dbContext;
         private readonly IAmazonSQS _sqsClient;
         private readonly string _queueUrl;
+        private readonly string _bucketName;
+        private readonly IAmazonS3 _s3Client;
 
-        public PostService(IDynamoDBContext dbContext, IAmazonSQS sqsClient, IConfiguration configuration)
+
+        public PostService(IDynamoDBContext dbContext, IAmazonSQS sqsClient, IConfiguration configuration, IAmazonS3 s3Client)
         {
             _dbContext = dbContext;
             _sqsClient = sqsClient;
             _queueUrl = "https://sqs.eu-north-1.amazonaws.com/474668427912/image-loaded-notification";
+            _bucketName = configuration["S3BucketName"]; // Извлечение имени бакета из конфигурации
+            _s3Client = s3Client;
         }
 
         public async Task<PostDto> CreatePostAsync(string caption, IFormFile image, string userName)
@@ -26,18 +32,22 @@ namespace Content.Services
                 throw new ArgumentException("No image uploaded.", nameof(image));
 
             var originalFileName = $"{Path.GetFileNameWithoutExtension(image.FileName)}_{Guid.NewGuid()}{Path.GetExtension(image.FileName)}";
-            var originalFilePath = Path.Combine("uploads", originalFileName);
+            var fileTransferUtility = new Amazon.S3.Transfer.TransferUtility(_s3Client);
 
-            using (var fileStream = new FileStream(originalFilePath, FileMode.Create))
+            using (var newMemoryStream = new MemoryStream())
             {
-                await image.CopyToAsync(fileStream);
+                await image.CopyToAsync(newMemoryStream);
+                await fileTransferUtility.UploadAsync(newMemoryStream, _bucketName, originalFileName);
             }
+
+            var imageUrl = $"https://{_bucketName}.s3.amazonaws.com/{originalFileName}";
+
 
             var post = new Post
             {
                 Id = Guid.NewGuid(),
                 Caption = caption,
-                ImageUrl = originalFilePath,
+                ImageUrl = imageUrl,
                 Creator = userName ?? "Anonymous",
                 CreatedAt = DateTime.UtcNow,
                 Comments = new List<Comment>()
@@ -47,9 +57,9 @@ namespace Content.Services
 
             var message = new
             {
-                PostId = post.Id,
-                OriginalFilePath = originalFilePath,
-                FileName = originalFileName
+                BucketName = _bucketName,
+                ObjectKey = originalFileName,
+                PostId = post.Id
             };
 
             var sendMessageRequest = new SendMessageRequest
@@ -58,7 +68,7 @@ namespace Content.Services
                 MessageBody = JsonSerializer.Serialize(message)
             };
 
-            await _sqsClient.SendMessageAsync(sendMessageRequest);
+            var response = await _sqsClient.SendMessageAsync(sendMessageRequest);
 
             return new PostDto
             {
