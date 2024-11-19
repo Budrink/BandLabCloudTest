@@ -8,8 +8,8 @@ namespace Content.Models
         [DynamoDBHashKey]
         public Guid Id { get; set; }
         public string Caption { get; set; } = string.Empty;
-        public string ImageUrl { get; set; } = string.Empty; // —сылка на .jpg файл
-        public string OriginalImageUrl { get; set; } = string.Empty; // —сылка на оригинал
+        public string ResizedImageObjectKey { get; set; } = string.Empty;
+        public string OriginalImageObjectKey { get; set; } = string.Empty;
         public string Creator { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public List<Comment> Comments { get; set; }

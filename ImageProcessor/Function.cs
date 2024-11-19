@@ -17,6 +17,7 @@ namespace ImageProcessor
     {
         private readonly IAmazonS3 _s3Client;
         private readonly IAmazonSQS _sqsClient;
+        // todo: replace by loading from env variables
         private readonly string _notificationQueueUrl = "https://sqs.eu-north-1.amazonaws.com/474668427912/image-processed-notifications";
 
         public Function()
@@ -67,7 +68,6 @@ namespace ImageProcessor
                         PostId = postId,
                         OriginalObjectKey = objectKey,
                         ResizedObjectKey = resizedObjectKey,
-                        ResizedImageUrl = url
                     };
 
                     var sendMessageRequest = new SendMessageRequest

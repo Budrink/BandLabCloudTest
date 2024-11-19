@@ -3,8 +3,10 @@ using Amazon.SQS;
 using Amazon.DynamoDBv2.DataModel;
 using Newtonsoft.Json;
 using Content.Models;
+using Amazon.S3.Model;
+using Amazon.S3;
 
-namespace Content.Services
+namespace ContentService.BackgroundServices
 {
     public class ImageProcessingNotificationService : BackgroundService
     {
@@ -16,7 +18,8 @@ namespace Content.Services
             "https://sqs.eu-north-1.amazonaws.com/474668427912/image-processed-notifications",
         };
 
-        public ImageProcessingNotificationService(IAmazonSQS sqsClient, IDynamoDBContext dbContext, ILogger<ImageProcessingNotificationService> logger)
+        public ImageProcessingNotificationService(IAmazonSQS sqsClient, IDynamoDBContext dbContext,
+                                                  ILogger<ImageProcessingNotificationService> logger)
         {
             _sqsClient = sqsClient;
             _dbContext = dbContext;
@@ -61,7 +64,7 @@ namespace Content.Services
 
                     if (post != null)
                     {
-                        post.ImageUrl = notification.ResizedImageUrl;
+                        post.ResizedImageObjectKey = notification.ResizedObjectKey;
                         await _dbContext.SaveAsync(post, token);
                     }
 
@@ -85,6 +88,5 @@ namespace Content.Services
         public Guid PostId { get; set; }
         public string OriginalObjectKey { get; set; }
         public string ResizedObjectKey { get; set; }
-        public string ResizedImageUrl { get; set; }
     }
 }

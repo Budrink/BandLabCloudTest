@@ -5,6 +5,7 @@ using Content.Dto;
 using Content.Models;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.S3;
+using Amazon.S3.Model;
 
 namespace Content.Services
 {
@@ -21,8 +22,8 @@ namespace Content.Services
         {
             _dbContext = dbContext;
             _sqsClient = sqsClient;
-            _queueUrl = "https://sqs.eu-north-1.amazonaws.com/474668427912/image-loaded-notification";
-            _bucketName = configuration["S3BucketName"]; // Извлечение имени бакета из конфигурации
+            _queueUrl = configuration["ImageLoadNotificationQueueUrl"];
+            _bucketName = configuration["S3BucketName"];
             _s3Client = s3Client;
         }
 
@@ -47,7 +48,7 @@ namespace Content.Services
             {
                 Id = Guid.NewGuid(),
                 Caption = caption,
-                ImageUrl = imageUrl,
+                OriginalImageObjectKey = originalFileName,
                 Creator = userName ?? "Anonymous",
                 CreatedAt = DateTime.UtcNow,
                 Comments = new List<Comment>()
@@ -74,8 +75,8 @@ namespace Content.Services
             {
                 Id = post.Id,
                 Caption = post.Caption,
-                ImageUrl = post.ImageUrl,
                 CreatedAt = post.CreatedAt,
+                ImageUrl = string.Empty,
                 LastTwoComments = new List<CommentDto>()
             };
         }
@@ -91,7 +92,7 @@ namespace Content.Services
                 {
                     Id = p.Id,
                     Caption = p.Caption,
-                    ImageUrl = p.ImageUrl,
+                    ImageUrl = GeneratePreSignedURL(_bucketName, p.ResizedImageObjectKey),
                     CreatedAt = p.CreatedAt,
                     LastTwoComments = p.Comments
                         .OrderByDescending(c => c.CreatedAt)
@@ -171,5 +172,21 @@ namespace Content.Services
             await _dbContext.SaveAsync(post);
             return true;
         }
+
+
+        private string GeneratePreSignedURL(string bucketName, string objectKey)
+        {
+            var request = new GetPreSignedUrlRequest
+            {
+                BucketName = bucketName,
+                Key = objectKey,
+                Expires = DateTime.UtcNow.AddHours(1), // URL будет действителен в течение 1 часа
+                Protocol = Protocol.HTTPS
+            };
+
+            return _s3Client.GetPreSignedURL(request);
+        }
     }
+
+
 }

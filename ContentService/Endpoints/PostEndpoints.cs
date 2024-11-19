@@ -2,6 +2,7 @@ using Content.Data;
 using Content.Models;
 using Content.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,9 +13,9 @@ namespace Content.Endpoints
         public static void MapPostEndpoints(this IEndpointRouteBuilder routes)
         {
             routes.MapPost("/api/posts/create",
-                async (IPostService postService, string userName, string caption, IFormFile image) =>
+                [Authorize] async (IPostService postService, string caption, IFormFile image, HttpContext httpContext) =>
                 {
-                    //var userName = httpContext.User.Identity?.Name;
+                    var userName = httpContext.User.Identity?.Name;
                     var post = await postService.CreatePostAsync(caption, image, userName);
                     return Results.Ok(post);
                 }).DisableAntiforgery();
@@ -23,11 +24,6 @@ namespace Content.Endpoints
             {
                 var posts = await postService.GetPostsAsync();
                 return Results.Ok(posts);
-            });
-
-            routes.MapGet("api/check", (IPostService postService) =>
-            {
-                return Results.Ok("OK");
             });
 
             routes.MapGet("/api/posts/{postId}/comments", async (Guid postId, IPostService postService) =>

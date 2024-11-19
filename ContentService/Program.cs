@@ -5,9 +5,10 @@ using Content.Endpoints;
 using Content.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.OpenApi.Models;
 using Amazon.S3;
+using ContentService.BackgroundServices;
+using System.Text;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -60,23 +61,30 @@ builder.Services.AddAWSService<IAmazonS3>();
 // Configure AWS options
 builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
 
-// Configure JWT authentication with AWS Cognito
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+
+
+// Настройка аутентификации JWT
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        options.Authority = builder.Configuration["Cognito:Authority"];
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidIssuer = builder.Configuration["Cognito:Authority"],
-            ValidAudience = builder.Configuration["Cognito:ClientId"]
-        };
-    });
+        ValidateIssuer = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidateAudience = true,
+        ValidAudience = jwtSettings["Audience"],
+        ValidateLifetime = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"])),
+        ClockSkew = TimeSpan.Zero // Убираем задержку на токен
+    };
+});
 
 builder.Services.AddAuthorization();
-
 
 var app = builder.Build();
 
