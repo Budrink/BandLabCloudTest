@@ -12,6 +12,8 @@ namespace Content.Endpoints
     {
         public static void MapPostEndpoints(this IEndpointRouteBuilder routes)
         {
+            routes.MapGet("/api/healthckeck", () => Results.Ok("Healthy!"));
+
             routes.MapPost("/api/posts/create",
                 [Authorize] async (IPostService postService, string caption, IFormFile image, HttpContext httpContext) =>
                 {
