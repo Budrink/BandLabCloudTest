@@ -87,27 +87,44 @@ namespace Content.Services
             var conditions = new List<ScanCondition>();
             var posts = await _dbContext.ScanAsync<Post>(conditions).GetRemainingAsync();
 
-            return posts
-                .OrderByDescending(p => p.CreatedAt)
-                .Select(p => new PostDto
+            var postDtos = new List<PostDto>();
+
+            foreach (var post in posts)
+            {
+                var commentConditions = new List<ScanCondition>
                 {
-                    Id = p.Id,
-                    Caption = p.Caption,
-                    ImageUrl = GeneratePreSignedURL(_bucketName, p.ResizedImageObjectKey),
-                    CreatedAt = p.CreatedAt,
-                    LastTwoComments = p.Comments
-                        .OrderByDescending(c => c.CreatedAt)
-                        .Take(2)
-                        .Select(c => new CommentDto
-                        {
-                            Id = c.Id,
-                            Content = c.Content,
-                            Creator = c.Creator,
-                            CreatedAt = c.CreatedAt
-                        })
-                        .ToList()
-                })
-                .ToList();
+                    new ScanCondition("PostId", ScanOperator.Equal, post.Id)
+                };
+
+                var comments = await _dbContext.ScanAsync<Comment>(commentConditions)
+                    .GetRemainingAsync();
+
+                var lastTwoComments = comments
+                    .OrderByDescending(c => c.CreatedAt)
+                    .Take(2)
+                    .Select(c => new CommentDto
+                    {
+                        Id = c.Id,
+                        Content = c.Content,
+                        Creator = c.Creator,
+                        CreatedAt = c.CreatedAt
+                    })
+                    .ToList();
+
+                var postDto = new PostDto
+                {
+                    Id = post.Id,
+                    Caption = post.Caption,
+                    ImageUrl = GeneratePreSignedURL(_bucketName, post.ResizedImageObjectKey),
+                    CreatedAt = post.CreatedAt,
+                    LastTwoComments = lastTwoComments
+                };
+
+                postDtos.Add(postDto);
+            }
+
+            return postDtos.OrderByDescending(p => p.CreatedAt).ToList();
+
         }
 
         public async Task<List<CommentDto>> GetPostCommentsAsync(Guid postId)
